@@ -3,9 +3,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const urlParams = new URLSearchParams(queryString);
   const jobId = urlParams.get('id');
 
-  if (!jobId) {
-    window.location.href = 'https://empoweredrecruitment-ec87a032a3d444380f.webflow.io/explore-jobs';
-    return;
+  if (!job || typeof job.title !== 'string' || job.title.trim() === '') {
+  console.warn('⚠️ Invalid job object returned from API:', job);
+  window.location.href = 'https://empoweredrecruitment-ec87a032a3d444380f.webflow.io/explore-jobs';
+  return;
   }
 
   const fetchJob = async () => {
