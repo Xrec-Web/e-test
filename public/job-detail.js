@@ -1,15 +1,14 @@
-document.addEventListener('DOMContentLoaded', () => {
+const fetchData = async () => {
   const queryString = window.location.search;
   const urlParams = new URLSearchParams(queryString);
   const jobId = urlParams.get('id');
 
   if (!jobId) {
-    console.warn('⚠️ No job ID found in URL');
     window.location.href = 'https://empoweredrecruitment-ec87a032a3d444380f.webflow.io/explore-jobs';
     return;
   }
 
-  const fetchJob = async () => {
+  let fetchJob = async () => {
     try {
       const response = await fetch(`https://e-test-nu.vercel.app/api/job?id=${jobId}`, {
         method: 'GET',
@@ -19,7 +18,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const data = await response.json();
 
       document.querySelectorAll('[ms-code-skeleton]').forEach((element) => {
-        const delay = parseInt(element.getAttribute('ms-code-skeleton')) || 2000;
+        let delay = element.getAttribute('ms-code-skeleton');
+        delay = isNaN(delay) ? 2000 : parseInt(delay);
         setTimeout(() => {
           const skeletonDiv = element.querySelector('.skeleton-loader');
           if (skeletonDiv) element.removeChild(skeletonDiv);
@@ -28,51 +28,48 @@ document.addEventListener('DOMContentLoaded', () => {
 
       return data;
     } catch (error) {
-      console.error('❌ Error fetching job:', error);
-      return {};
+      console.error('❌ Failed to fetch job:', error);
+      return null;
     }
   };
 
-  const renderJob = async () => {
-    const job = await fetchJob();
-    console.log('📦 Job loaded:', job);
+  const job = await fetchJob();
+  if (!job || !job.title) {
+    window.location.href = 'https://empoweredrecruitment-ec87a032a3d444380f.webflow.io/explore-jobs';
+    return;
+  }
 
-    if (!job || typeof job.title !== 'string' || job.title.trim() === '') {
-      console.warn('⚠️ Invalid or empty job returned. Redirecting...');
-      window.location.href = 'https://empoweredrecruitment-ec87a032a3d444380f.webflow.io/explore-jobs';
-      return;
+  document.querySelector('[data-element="job-title"]').textContent = job.title;
+  document.querySelector('[data-element="job-city"]').textContent = job.city;
+  document.querySelector('[data-element="job-description"]').innerHTML = job.description;
+
+  const owner = job.owners?.[0];
+  const ownerPhoto = document.querySelector('[data-element="owner-photo"]');
+  const fallbackPhoto = 'https://uploads-ssl.webflow.com/66782c28be38686013eaecc8/66977e1201992d31e243ec13_taylen-erickson.webp';
+
+  if (owner) {
+    document.querySelector('[data-element="owner"]').textContent = owner.name;
+    if (ownerPhoto) {
+      ownerPhoto.src = owner.avatar_original_url || fallbackPhoto;
+      ownerPhoto.srcset = `${ownerPhoto.src} 1x, ${ownerPhoto.src} 2x`;
     }
+  }
 
-    const setText = (selector, value) => {
-      const el = document.querySelector(selector);
-      if (el) el.textContent = value;
-    };
+  document.querySelector('[data-element="job-category"]').textContent =
+    job.category?.name || 'Others';
+  document.querySelector('[data-element="job-type"]').textContent =
+    job.job_type?.name || '';
+  document.querySelector('[data-element="job-salary"]').textContent = job.salary || '';
+};
 
-    setText('[data-element="job-title"]', job.title);
-    setText('[data-element="job-city"]', job.city);
-    const descEl = document.querySelector('[data-element="job-description"]');
-    if (descEl) descEl.innerHTML = job.description;
+fetchData();
 
-    const owner = job.owners?.[0];
-    if (owner) {
-      setText('[data-element="owner"]', owner.name);
-      const ownerPhoto = document.querySelector('[data-element="owner-photo"]');
-      const fallback = 'https://uploads-ssl.webflow.com/66782c28be38686013eaecc8/66977e1201992d31e243ec13_taylen-erickson.webp';
+// Apply Job Function
+const queryString = window.location.search;
+const urlParams = new URLSearchParams(queryString);
+const jobId = urlParams.get('id');
 
-      if (ownerPhoto) {
-        ownerPhoto.src = owner.avatar_original_url || fallback;
-        ownerPhoto.srcset = `${ownerPhoto.src} 1x, ${ownerPhoto.src} 2x`;
-      }
-    }
-
-    setText('[data-element="job-category"]', job.category?.name || 'Others');
-    setText('[data-element="job-type"]', job.job_type?.name || '');
-    setText('[data-element="job-salary"]', job.salary || '');
-  };
-
-  renderJob();
-
-  // Apply Form
+document.addEventListener('DOMContentLoaded', () => {
   const inputElement = document.querySelector('input[type="file"][name="fileToUpload"]');
   const pond = FilePond.create(inputElement, {
     credits: false,
@@ -81,10 +78,10 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   Webflow.push(() => {
-    $('#wf-form-Job-Apply-Form').submit(async (e) => {
+    $('#wf-form-Job-Apply-Form').submit(async function (e) {
       e.preventDefault();
-      const file = pond.getFile();
 
+      const file = pond.getFile();
       if (!file) {
         alert('Please upload a resume.');
         return;
@@ -106,10 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
         body: form,
       };
 
-      $('.submit-button-apply-job')
-        .val('Please Wait...')
-        .css('cursor', 'not-allowed')
-        .attr('disabled', true);
+      $('.submit-button-apply-job').val('Please Wait...').css('cursor', 'not-allowed').attr('disabled', true);
 
       fetch('https://e-test-nu.vercel.app/api/apply', options)
         .then(() => {
@@ -123,16 +117,13 @@ document.addEventListener('DOMContentLoaded', () => {
           }).showToast();
           pond.removeFile();
           $('#wf-form-Job-Apply-Form').trigger('reset');
-          $('.submit-button-apply-job')
-            .val('Submit')
-            .css('cursor', 'pointer')
-            .attr('disabled', false);
+          $('.submit-button-apply-job').val('Submit').css('cursor', 'pointer').attr('disabled', false);
         })
-        .catch((err) => console.error('❌ Error submitting form:', err));
+        .catch((err) => console.error('❌ Submit error:', err));
     });
   });
 
-  // Filepond Inputs (CMS)
+  // Filepond Inputs for CMS
   document.querySelectorAll('form[ms-code-file-upload="form"]').forEach((form) => {
     form.setAttribute('enctype', 'multipart/form-data');
     const uploadInputs = form.querySelectorAll('[ms-code-file-upload-input]');
@@ -147,7 +138,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Copy URL
+  // Copy Job URL Button
   const copyBtn = document.querySelector('.copy-url');
   if (copyBtn) {
     copyBtn.addEventListener('click', () => {
@@ -165,7 +156,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Skeleton Loader
+  // Add Skeleton Loaders
   document.querySelectorAll('[ms-code-skeleton]').forEach((element) => {
     const skeletonDiv = document.createElement('div');
     skeletonDiv.classList.add('skeleton-loader');
