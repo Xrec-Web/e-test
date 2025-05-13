@@ -11,8 +11,8 @@ export default async function handler(req, res) {
   }
   
   // Your Loxo credentials (use environment variables)
-  const AGENCY_SLUG = process.env.AGENCY_SLUG; // Replace with correct slug if needed
-  const BEARER_TOKEN = process.env.LOXO_BEARER_TOKEN;
+  const AGENCY_SLUG = process.env.URL_SLUG; // Replace with correct slug if needed
+  const BEARER_TOKEN = process.env.BEARER_TOKEN;
   
   try {
     // Server-side request to Loxo (protected from CORS issues)
