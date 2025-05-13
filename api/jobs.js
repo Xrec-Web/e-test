@@ -1,7 +1,7 @@
 // File: /api/jobs.js
 export default async function handler(req, res) {
   // Set CORS headers to allow your Webflow site
-  res.setHeader('Access-Control-Allow-Origin', 'https://loxo-buildout.webflow.io');
+  res.setHeader('Access-Control-Allow-Origin', 'https://empoweredrecruitment-ec87a032a3d444380f.webflow.io');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   
