@@ -1,6 +1,12 @@
-const fetchJobs = async () => {
-  const AGENCY_SLUG = 'skys-the-limit-staffing'; // Your agency slug
-  const BEARER_TOKEN = 'Bearer 00eec6549ea1dc3cc215ad33483ce488fe012a33c9e4d2c96d6d48c38050299fe69e6591b34961f81ec24e32f590a4db7ea313e6b2e100c9a764d1a337b83c4095'; // ⚠️ Exposed in frontend
+export default async function handler(req, res) {
+  res.setHeader('Access-Control-Allow-Origin', 'https://empoweredrecruitment-ec87a032a3d444380f.webflow.io');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+  if (req.method === 'OPTIONS') return res.status(200).end();
+
+  const AGENCY_SLUG = 'skys-the-limit-staffing';
+  const BEARER_TOKEN = 'Bearer 00eec6549ea1dc3...'; // still secure since this is server-side
 
   try {
     const response = await fetch(`https://app.loxo.co/api/${AGENCY_SLUG}/jobs`, {
@@ -11,15 +17,13 @@ const fetchJobs = async () => {
     });
 
     if (!response.ok) {
-      const text = await response.text();
-      throw new Error(`Loxo API error ${response.status}: ${text}`);
+      const error = await response.text();
+      return res.status(response.status).json({ error });
     }
 
     const data = await response.json();
-    console.log('✅ Jobs received:', data.results?.length);
-    return data;
-  } catch (error) {
-    console.error('❌ Failed to fetch jobs:', error);
-    return { results: [] };
+    return res.status(200).json(data);
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
   }
-};
+}
