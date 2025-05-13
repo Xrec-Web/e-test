@@ -1,194 +1,177 @@
-const fetchData = async () => {
-  const queryString = window.location.search;
-  const urlParams = new URLSearchParams(queryString);
-  const jobId = urlParams.get('id');
+document.addEventListener('DOMContentLoaded', () => {
+  window.fsAttributes = window.fsAttributes || [];
+  window.fsAttributes.push([
+    'cmsfilter',
+    async (filtersInstances) => {
+      console.log('🔥 CMS Filter initialized');
 
-  if (!jobId) {
-    window.location.href = 'https://empoweredrecruitment-ec87a032a3d444380f.webflow.io/explore-jobs';
-    return;
-  }
+      const [filtersInstance] = filtersInstances;
+      const { listInstance } = filtersInstance;
 
-  const fetchJob = async () => {
-    try {
-      const response = await fetch(`https://e-test-nu.vercel.app/api/job?id=${jobId}`, {
-        method: 'GET',
-        headers: { accept: 'application/json' },
-      });
-
-      const data = await response.json();
-
-      const skeletonElements = document.querySelectorAll('[ms-code-skeleton]');
-      skeletonElements.forEach((element) => {
-        let delay = element.getAttribute('ms-code-skeleton');
-        delay = isNaN(delay) ? 2000 : parseInt(delay);
-        setTimeout(() => {
-          const skeletonDiv = element.querySelector('.skeleton-loader');
-          if (skeletonDiv) element.removeChild(skeletonDiv);
-        }, delay);
-      });
-
-      return data;
-    } catch (error) {
-      console.error('❌ Failed to fetch job:', error);
-      return {};
-    }
-  };
-
-  const job = await fetchJob();
-  console.log('📦 Job data:', job);
-
-  if (!job.title) {
-    console.warn('⚠️ No valid job found. Redirecting to explore.');
-    window.location.href = 'https://empoweredrecruitment-ec87a032a3d444380f.webflow.io/explore-jobs';
-    return;
-  }
-
-  const setText = (selector, value) => {
-    const el = document.querySelector(selector);
-    if (el) el.textContent = value;
-  };
-
-  setText('[data-element="job-title"]', job.title);
-  setText('[data-element="job-city"]', job.city);
-  const descEl = document.querySelector('[data-element="job-description"]');
-  if (descEl) descEl.innerHTML = job.description;
-
-  const owner = job.owners?.[0];
-  if (owner) {
-    setText('[data-element="owner"]', owner.name);
-
-    const ownerPhoto = document.querySelector('[data-element="owner-photo"]');
-    const fallbackPhoto = 'https://uploads-ssl.webflow.com/66782c28be38686013eaecc8/66977e1201992d31e243ec13_taylen-erickson.webp';
-
-    if (ownerPhoto) {
-      ownerPhoto.src = owner.avatar_original_url || fallbackPhoto;
-      ownerPhoto.srcset = `${ownerPhoto.src} 1x, ${ownerPhoto.src} 2x`;
-    }
-  }
-
-  setText('[data-element="job-category"]', job.category?.name || 'Others');
-  setText('[data-element="job-type"]', job.job_type?.name || '');
-  setText('[data-element="job-salary"]', job.salary || '');
-};
-
-fetchData();
-
-// Apply Job Form Submission
-const queryString = window.location.search;
-const urlParams = new URLSearchParams(queryString);
-const jobId = urlParams.get('id');
-
-document.addEventListener('DOMContentLoaded', function () {
-  const inputElement = document.querySelector('input[type="file"][name="fileToUpload"]');
-  const pond = FilePond.create(inputElement, {
-    credits: false,
-    name: 'fileToUpload',
-    storeAsFile: true,
-  });
-
-  Webflow.push(function () {
-    $('#wf-form-Job-Apply-Form').submit(async function (e) {
-      e.preventDefault();
-
-      const file = pond.getFile();
-      if (!file) {
-        alert('Please upload a resume.');
+      if (!listInstance || !listInstance.items?.length) {
+        console.warn('⚠️ No CMS items found. Aborting.');
         return;
       }
 
-      const form = new FormData();
-      form.append('email', document.getElementById('email-job').value);
-      form.append('name', document.getElementById('name-job').value);
-      form.append('phone', document.getElementById('phone-job').value);
-      form.append('linkedin', document.getElementById('linkedin-job').value);
-      form.append('resume', file.file, file.file.name);
+      const [item] = listInstance.items;
+      if (!item || !item.element) {
+        console.error('❌ No template item found in listInstance.');
+        return;
+      }
 
-      const options = {
-        method: 'POST',
-        headers: {
-          accept: 'application/json',
-          JobId: jobId,
-        },
-        body: form,
-      };
+      const itemTemplateElement = item.element;
 
-      $('.submit-button-apply-job')
-        .val('Please Wait...')
-        .css('cursor', 'not-allowed')
-        .attr('disabled', true);
+      // Fetch data
+      const jobs = await fetchJobs();
+      if (!jobs.results?.length) {
+        console.warn('⚠️ No jobs received from API.');
+        return;
+      }
 
-      fetch('https://e-test-nu.vercel.app/api/apply', options)
-        .then(() => {
-          $('.close-modal-button').trigger('click');
-          Toastify({
-            text: 'Your application was successfully sent!',
-            duration: 2000,
-            gravity: 'top',
-            position: 'center',
-            style: { background: '#527853', color: '#FFFFFF' },
-          }).showToast();
-          pond.removeFile();
-          $('#wf-form-Job-Apply-Form').trigger('reset');
-          $('.submit-button-apply-job')
-            .val('Submit')
-            .css('cursor', 'pointer')
-            .attr('disabled', false);
-        })
-        .catch((err) => console.error(err));
+      // Remove existing CMS items
+      listInstance.clearItems();
+
+      // Create new items
+      const newItems = jobs.results.map((job) =>
+        createItem(job, 'jobData.description', itemTemplateElement)
+      ).filter(Boolean); // skip nulls
+
+      listInstance.addItems(newItems);
+
+      // Filters
+      const filtersContractTemplateElement = filtersInstance.form.querySelector('[data-element="filter-contract"]');
+      const filtersDepartementTemplateElement = filtersInstance.form.querySelector('[data-element="filter-departement"]');
+
+      if (!filtersContractTemplateElement || !filtersDepartementTemplateElement) {
+        console.warn('⚠️ Filter template elements missing.');
+        return;
+      }
+
+      const filtersWrapperElement = filtersContractTemplateElement.parentElement;
+      const filtersWrapperElementDepartement = filtersDepartementTemplateElement.parentElement;
+
+      filtersContractTemplateElement.remove();
+      filtersDepartementTemplateElement.remove();
+
+      const jobTypes = collectJobType(jobs.results);
+      const departementList = collectDepartement(jobs.results);
+
+      for (const jobtype of jobTypes) {
+        const newFilter = createFilter(jobtype, filtersContractTemplateElement);
+        if (newFilter) filtersWrapperElement.append(newFilter);
+      }
+
+      for (const departement of departementList) {
+        const newFilter = createFilter(departement, filtersDepartementTemplateElement);
+        if (newFilter) filtersWrapperElementDepartement.append(newFilter);
+      }
+
+      filtersInstance.storeFiltersData();
+    },
+  ]);
+});
+
+const fetchJobs = async () => {
+  try {
+    console.log('📡 Fetching jobs from API...');
+    const response = await fetch('https://e-test-nu.vercel.app/api/jobs');
+    const data = await response.json();
+    console.log('✅ Jobs received:', data.results?.length);
+    return data;
+  } catch (error) {
+    console.error('❌ Failed to fetch jobs:', error);
+    return { results: [] };
+  }
+};
+
+const createItem = (job, jobDescription, templateElement) => {
+  if (!job?.title) return null;
+
+  const newItem = templateElement.cloneNode(true);
+
+  const urlLink = newItem.querySelector('[data-element="url-link"]');
+  const title = newItem.querySelector('[data-element="title"]');
+  const jobType = newItem.querySelector('[data-element="job-type"]');
+  const jobCategory = newItem.querySelector('[data-element="job-category"]');
+  const salary = newItem.querySelector('[data-element="salary"]');
+  const location = newItem.querySelector('[data-element="location"]');
+  const publishedAt = newItem.querySelector('[data-element="publishedAt"]');
+  const description = newItem.querySelector('[data-element="job-description"]');
+  const btnApplyJob = newItem.querySelector('[data-element="apply-now"]');
+
+  // Use staging URL
+  if (urlLink) urlLink.href = `https://empoweredrecruitment-ec87a032a3d444380f.webflow.io/job?id=${job.id}`;
+  if (title) title.textContent = job.title;
+  if (jobType) jobType.textContent = job.job_type?.name || '';
+  if (jobCategory) jobCategory.textContent = job.category?.name || 'Others';
+  if (salary) salary.textContent = job.salary?.replace(/\/year/g, '') || '';
+  if (location) location.textContent = job.city || '';
+  if (publishedAt && job.published_at) {
+    publishedAt.textContent = moment(job.published_at).startOf('day').fromNow();
+  }
+
+  if (description) {
+    // Optional async full description fetch (can be removed if not needed)
+    fetch(`https://e-test-nu.vercel.app/api/job?id=${job.id}`)
+      .then((res) => res.json())
+      .then((data) => {
+        description.innerHTML = data.description || '';
+      })
+      .catch(() => {
+        description.innerHTML = '';
+      });
+  }
+
+  if (btnApplyJob) {
+    btnApplyJob.addEventListener('click', () => {
+      document.querySelector('.modal-apply-jobs').style.display = 'grid';
+      window.jobId = job.id;
     });
-  });
-});
+  }
 
-// Filepond input binding (for CMS-driven form)
-const forms = document.querySelectorAll('form[ms-code-file-upload="form"]');
-forms.forEach((form) => {
-  form.setAttribute('enctype', 'multipart/form-data');
-  const uploadInputs = form.querySelectorAll('[ms-code-file-upload-input]');
+  return newItem;
+};
 
-  uploadInputs.forEach((uploadInput) => {
-    const inputName = uploadInput.getAttribute('ms-code-file-upload-input');
-    const fileInput = document.createElement('input');
-    fileInput.type = 'file';
-    fileInput.name = inputName;
-    fileInput.id = inputName;
-    fileInput.required = true;
-    uploadInput.appendChild(fileInput);
-  });
-});
+const collectJobType = (jobs) => {
+  const counts = {};
+  for (const { job_type } of jobs) {
+    const name = job_type?.name || 'Unknown';
+    counts[name] = (counts[name] || 0) + 1;
+  }
+  return Object.entries(counts).map(([name, total]) => ({ name, total }));
+};
 
-// Copy Job URL Button
-const copyBtn = document.querySelector('.copy-url');
-if (copyBtn) {
-  copyBtn.addEventListener('click', () => {
-    const currentUrl = window.location.href;
-    const tempInput = document.createElement('input');
-    tempInput.value = currentUrl;
-    document.body.appendChild(tempInput);
-    tempInput.select();
-    document.execCommand('copy');
-    document.body.removeChild(tempInput);
+const collectDepartement = (jobs) => {
+  const counts = {};
+  for (const { category } of jobs) {
+    const name = category?.name || 'Other';
+    counts[name] = (counts[name] || 0) + 1;
+  }
+  return Object.entries(counts).map(([name, total]) => ({ name, total }));
+};
 
-    const tooltip = $('.tooltip-copy-url');
-    setTimeout(() => tooltip.addClass('active'), 0);
-    setTimeout(() => tooltip.removeClass('active'), 2000);
-  });
-}
+const createFilter = (value, templateElement) => {
+  const newFilter = templateElement.cloneNode(true);
+  const label = newFilter.querySelector('span');
+  const input = newFilter.querySelector('input');
+  const count = newFilter.querySelector('p');
 
-// Skeleton placeholders
+  if (!label || !input) return null;
+
+  label.textContent = value.name;
+  input.value = value.name;
+  input.id = 'radio-' + value.name;
+  if (count) count.textContent = value.total;
+
+  return newFilter;
+};
+
+// Skeleton loading
 window.addEventListener('DOMContentLoaded', () => {
-  const skeletonElements = document.querySelectorAll('[ms-code-skeleton]');
-  skeletonElements.forEach((element) => {
+  document.querySelectorAll('[ms-code-skeleton]').forEach((element) => {
     const skeletonDiv = document.createElement('div');
     skeletonDiv.classList.add('skeleton-loader');
     element.style.position = 'relative';
     element.appendChild(skeletonDiv);
   });
 });
-
-// Open modal for Apply Job
-const applyBtn = document.querySelector('.apply-jobs.w-button');
-if (applyBtn) {
-  applyBtn.addEventListener('click', () => {
-    document.querySelector('.modal-apply-jobs').style.display = 'grid';
-  });
-}
