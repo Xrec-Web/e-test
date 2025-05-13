@@ -1,3 +1,8 @@
+// jobs.js — PUBLIC version with Bearer Token (for staging/demo only)
+
+const AGENCY_SLUG = 'skys-the-limit-staffing';
+const BEARER_TOKEN = 'Bearer 00eec6549ea1dc3cc215ad33483ce488fe012a33c9e4d2c96d6d48c38050299fe69e6591b34961f81ec24e32f590a4db7ea313e6b2e100c9a764d1a337b83c4095';
+
 document.addEventListener('DOMContentLoaded', () => {
   window.fsAttributes = window.fsAttributes || [];
   window.fsAttributes.push([
@@ -21,24 +26,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const itemTemplateElement = item.element;
 
-      // Fetch data
       const jobs = await fetchJobs();
       if (!jobs.results?.length) {
         console.warn('⚠️ No jobs received from API.');
         return;
       }
 
-      // Remove existing CMS items
       listInstance.clearItems();
 
-      // Create new items
       const newItems = jobs.results.map((job) =>
         createItem(job, 'jobData.description', itemTemplateElement)
-      ).filter(Boolean); // skip nulls
+      ).filter(Boolean);
 
       listInstance.addItems(newItems);
 
-      // Filters
       const filtersContractTemplateElement = filtersInstance.form.querySelector('[data-element="filter-contract"]');
       const filtersDepartementTemplateElement = filtersInstance.form.querySelector('[data-element="filter-departement"]');
 
@@ -73,8 +74,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
 const fetchJobs = async () => {
   try {
-    console.log('📡 Fetching jobs from API...');
-    const response = await fetch('https://e-test-nu.vercel.app/api/jobs');
+    console.log('📡 Fetching jobs from Loxo API...');
+    const response = await fetch(`https://app.loxo.co/api/${AGENCY_SLUG}/jobs`, {
+      headers: {
+        Authorization: BEARER_TOKEN,
+        'Content-Type': 'application/json',
+      },
+    });
     const data = await response.json();
     console.log('✅ Jobs received:', data.results?.length);
     return data;
@@ -99,20 +105,23 @@ const createItem = (job, jobDescription, templateElement) => {
   const description = newItem.querySelector('[data-element="job-description"]');
   const btnApplyJob = newItem.querySelector('[data-element="apply-now"]');
 
-  // Use staging URL
   if (urlLink) urlLink.href = `https://empoweredrecruitment-ec87a032a3d444380f.webflow.io/job?id=${job.id}`;
   if (title) title.textContent = job.title;
   if (jobType) jobType.textContent = job.job_type?.name || '';
   if (jobCategory) jobCategory.textContent = job.category?.name || 'Others';
-  if (salary) salary.textContent = job.salary?.replace(/\/year/g, '') || '';
+  if (salary) salary.textContent = job.salary?.replace(/\\/year/g, '') || '';
   if (location) location.textContent = job.city || '';
   if (publishedAt && job.published_at) {
     publishedAt.textContent = moment(job.published_at).startOf('day').fromNow();
   }
 
-  if (description) {
-    // Optional async full description fetch (can be removed if not needed)
-    fetch(`https://e-test-nu.vercel.app/api/job?id=${job.id}`)
+  if (description && job.id) {
+    fetch(`https://app.loxo.co/api/${AGENCY_SLUG}/jobs/${job.id}`, {
+      headers: {
+        Authorization: BEARER_TOKEN,
+        'Content-Type': 'application/json',
+      },
+    })
       .then((res) => res.json())
       .then((data) => {
         description.innerHTML = data.description || '';
