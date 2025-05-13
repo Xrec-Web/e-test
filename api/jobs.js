@@ -12,7 +12,7 @@ export default async function handler(req, res) {
   const URL_SLUG = 'skys-the-limit-staffing'; // Update if different
 
   try {
-    const response = await fetch(`https://api.loxo.co/api/v1/company/${URL_SLUG}/jobs`, {
+    const response = await fetch(`https://api.loxo.co/api/v1/company/skys-the-limit-staffing/jobs`, {
       headers: {
         Authorization: BEARER_TOKEN,
       },
