@@ -3,10 +3,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const urlParams = new URLSearchParams(queryString);
   const jobId = urlParams.get('id');
 
-  if (!job || typeof job.title !== 'string' || job.title.trim() === '') {
-  console.warn('⚠️ Invalid job object returned from API:', job);
-  window.location.href = 'https://empoweredrecruitment-ec87a032a3d444380f.webflow.io/explore-jobs';
-  return;
+  if (!jobId) {
+    console.warn('⚠️ No job ID found in URL');
+    window.location.href = 'https://empoweredrecruitment-ec87a032a3d444380f.webflow.io/explore-jobs';
+    return;
   }
 
   const fetchJob = async () => {
@@ -19,8 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const data = await response.json();
 
       document.querySelectorAll('[ms-code-skeleton]').forEach((element) => {
-        let delay = element.getAttribute('ms-code-skeleton');
-        delay = isNaN(delay) ? 2000 : parseInt(delay);
+        const delay = parseInt(element.getAttribute('ms-code-skeleton')) || 2000;
         setTimeout(() => {
           const skeletonDiv = element.querySelector('.skeleton-loader');
           if (skeletonDiv) element.removeChild(skeletonDiv);
@@ -38,7 +37,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const job = await fetchJob();
     console.log('📦 Job loaded:', job);
 
-    if (!job?.title) {
+    if (!job || typeof job.title !== 'string' || job.title.trim() === '') {
+      console.warn('⚠️ Invalid or empty job returned. Redirecting...');
       window.location.href = 'https://empoweredrecruitment-ec87a032a3d444380f.webflow.io/explore-jobs';
       return;
     }
@@ -56,12 +56,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const owner = job.owners?.[0];
     if (owner) {
       setText('[data-element="owner"]', owner.name);
-
       const ownerPhoto = document.querySelector('[data-element="owner-photo"]');
-      const fallbackPhoto = 'https://uploads-ssl.webflow.com/66782c28be38686013eaecc8/66977e1201992d31e243ec13_taylen-erickson.webp';
+      const fallback = 'https://uploads-ssl.webflow.com/66782c28be38686013eaecc8/66977e1201992d31e243ec13_taylen-erickson.webp';
 
       if (ownerPhoto) {
-        ownerPhoto.src = owner.avatar_original_url || fallbackPhoto;
+        ownerPhoto.src = owner.avatar_original_url || fallback;
         ownerPhoto.srcset = `${ownerPhoto.src} 1x, ${ownerPhoto.src} 2x`;
       }
     }
@@ -73,7 +72,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   renderJob();
 
-  // Apply Job Form
+  // Apply Form
   const inputElement = document.querySelector('input[type="file"][name="fileToUpload"]');
   const pond = FilePond.create(inputElement, {
     credits: false,
@@ -81,11 +80,11 @@ document.addEventListener('DOMContentLoaded', () => {
     storeAsFile: true,
   });
 
-  Webflow.push(function () {
-    $('#wf-form-Job-Apply-Form').submit(async function (e) {
+  Webflow.push(() => {
+    $('#wf-form-Job-Apply-Form').submit(async (e) => {
       e.preventDefault();
-
       const file = pond.getFile();
+
       if (!file) {
         alert('Please upload a resume.');
         return;
@@ -133,7 +132,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Filepond Input (CMS-driven)
+  // Filepond Inputs (CMS)
   document.querySelectorAll('form[ms-code-file-upload="form"]').forEach((form) => {
     form.setAttribute('enctype', 'multipart/form-data');
     const uploadInputs = form.querySelectorAll('[ms-code-file-upload-input]');
@@ -148,7 +147,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Copy Job URL
+  // Copy URL
   const copyBtn = document.querySelector('.copy-url');
   if (copyBtn) {
     copyBtn.addEventListener('click', () => {
@@ -166,7 +165,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Skeleton Loading
+  // Skeleton Loader
   document.querySelectorAll('[ms-code-skeleton]').forEach((element) => {
     const skeletonDiv = document.createElement('div');
     skeletonDiv.classList.add('skeleton-loader');
@@ -174,7 +173,7 @@ document.addEventListener('DOMContentLoaded', () => {
     element.appendChild(skeletonDiv);
   });
 
-  // Open Apply Modal
+  // Open Modal
   const applyBtn = document.querySelector('.apply-jobs.w-button');
   if (applyBtn) {
     applyBtn.addEventListener('click', () => {
