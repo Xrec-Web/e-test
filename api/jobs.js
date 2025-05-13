@@ -1,5 +1,5 @@
 export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Origin', '*'); // Replace with your Webflow URL in prod
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
@@ -11,12 +11,13 @@ export default async function handler(req, res) {
   if (!jobId) {
     return res.status(400).json({
       error: 'Missing required parameters',
-      detail: { AGENCY_SLUG: 'skys-the-limit-staffing', tokenSet: true }
+      detail: { tokenSet: !!BEARER_TOKEN, receivedId: jobId },
     });
   }
 
   try {
     const response = await fetch(`https://app.loxo.co/api/job/${jobId}`, {
+      method: 'GET',
       headers: {
         Authorization: BEARER_TOKEN,
         'Content-Type': 'application/json',
@@ -25,13 +26,13 @@ export default async function handler(req, res) {
 
     if (!response.ok) {
       const errorText = await response.text();
-      return res.status(response.status).json({ error: 'Failed to fetch job', detail: errorText });
+      return res.status(response.status).json({ error: 'Loxo API error', detail: errorText });
     }
 
-    const jobData = await response.json();
-    return res.status(200).json(jobData);
+    const job = await response.json();
+    return res.status(200).json(job);
   } catch (error) {
     console.error('❌ Server error:', error);
-    return res.status(500).json({ error: 'Internal server error', detail: error.message });
+    return res.status(500).json({ error: 'Server error', detail: error.message });
   }
 }
