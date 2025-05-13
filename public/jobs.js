@@ -79,7 +79,7 @@ const createItem = (job, jobDescription, templateElement) => {
   const description = newItem.querySelector('[data-element="job-description"]');
   const btnApplyJob = newItem.querySelector('[data-element="apply-now"]');
 
-  if (urlLink) urlLink.href = `https://your-domain.com/job?id=${job.id}`;
+  if (urlLink) urlLink.href = `https://www.empoweredrecruitment.com.au/job?id=${job.id}`;
   if (title) title.textContent = job.title;
   if (jobType) jobType.textContent = job.job_type.name;
   if (jobCategory) jobCategory.textContent = job.category?.name || 'Others';
