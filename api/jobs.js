@@ -1,37 +1,33 @@
-// File: /api/jobs.js
 export default async function handler(req, res) {
-  // Set CORS headers to allow your Webflow site
-  res.setHeader('Access-Control-Allow-Origin', 'https://loxo-buildout.webflow.io');
+  res.setHeader('Access-Control-Allow-Origin', '*'); // for testing; restrict in prod
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  
-  // Handle OPTIONS request (preflight)
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
-  
-  // Your Loxo credentials (use environment variables)
-  const AGENCY_SLUG = process.env.URL_SLUG; // Replace with correct slug if needed
-  const BEARER_TOKEN = process.env.BEARER_TOKEN;
-  
+
+  if (req.method === 'OPTIONS') return res.status(200).end();
+
+  // TEMP: Hardcoded values for testing
+  const AGENCY_SLUG = 'skys-the-limit-staffing';
+  const BEARER_TOKEN = 'Bearer 00eec6549ea1dc3cc215ad33483ce488fe012a33c9e4d2c96d6d48c38050299fe69e6591b34961f81ec24e32f590a4db7ea313e6b2e100c9a764d1a337b83c4095d3d20a4abe060da296c4e3dfcec8e59b4284c21e99d3de71a8a523a8a9333ecd1e3172e53bf6bd639a1917648a0a278f8414de681aa37b081f51560f4b2843';
+
   try {
-    // Server-side request to Loxo (protected from CORS issues)
-    const response = await fetch(`https://app.loxo.co/api/${AGENCY_SLUG}/jobs`, {
+    const url = `https://api.loxo.co/api/v1/company/${AGENCY_SLUG}/jobs`;
+    const response = await fetch(url, {
       headers: {
-        'Authorization': `Bearer ${BEARER_TOKEN}`,
-        'Content-Type': 'application/json'
-      }
+        Authorization: BEARER_TOKEN,
+        'Content-Type': 'application/json',
+      },
     });
-    
+
     if (!response.ok) {
-      throw new Error(`API request failed with status ${response.status}`);
+      const errorBody = await response.text();
+      console.error('❌ Loxo returned error:', response.status, errorBody);
+      return res.status(response.status).json({ error: 'Loxo fetch failed', detail: errorBody });
     }
-    
-    // Return data to client
+
     const data = await response.json();
     return res.status(200).json(data);
-  } catch (error) {
-    console.error('Error fetching jobs:', error);
-    return res.status(500).json({ error: 'Unable to load job listings. Please try again later.' });
+  } catch (err) {
+    console.error('❌ Server error:', err.message);
+    return res.status(500).json({ error: 'Unable to load job listings. Please try again later.', detail: err.message });
   }
 }
