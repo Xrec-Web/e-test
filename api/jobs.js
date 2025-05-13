@@ -1,5 +1,5 @@
 export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Origin', '*'); // Use Webflow.io origin in production
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
@@ -10,6 +10,7 @@ export default async function handler(req, res) {
 
   try {
     const response = await fetch(`https://api.loxo.co/api/v1/company/${AGENCY_SLUG}/jobs`, {
+      method: 'GET',
       headers: {
         Authorization: BEARER_TOKEN,
         'Content-Type': 'application/json',
