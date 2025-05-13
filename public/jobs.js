@@ -29,34 +29,46 @@ const fetchData = async () => {
 
       return data;
     } catch (error) {
-      console.error('Failed to fetch job:', error);
+      console.error('❌ Failed to fetch job:', error);
       return {};
     }
   };
 
   const job = await fetchJob();
+  console.log('📦 Job data:', job);
 
-  if (!job.title) return;
+  if (!job.title) {
+    console.warn('⚠️ No valid job found. Redirecting to explore.');
+    window.location.href = 'https://empoweredrecruitment-ec87a032a3d444380f.webflow.io/explore-jobs';
+    return;
+  }
 
-  document.querySelector('[data-element="job-title"]').textContent = job.title;
-  document.querySelector('[data-element="job-city"]').textContent = job.city;
-  document.querySelector('[data-element="job-description"]').innerHTML = job.description;
+  const setText = (selector, value) => {
+    const el = document.querySelector(selector);
+    if (el) el.textContent = value;
+  };
+
+  setText('[data-element="job-title"]', job.title);
+  setText('[data-element="job-city"]', job.city);
+  const descEl = document.querySelector('[data-element="job-description"]');
+  if (descEl) descEl.innerHTML = job.description;
 
   const owner = job.owners?.[0];
   if (owner) {
-    document.querySelector('[data-element="owner"]').textContent = owner.name;
+    setText('[data-element="owner"]', owner.name);
+
     const ownerPhoto = document.querySelector('[data-element="owner-photo"]');
     const fallbackPhoto = 'https://uploads-ssl.webflow.com/66782c28be38686013eaecc8/66977e1201992d31e243ec13_taylen-erickson.webp';
 
-    ownerPhoto.src = owner.avatar_original_url || fallbackPhoto;
-    ownerPhoto.srcset = `${ownerPhoto.src} 1x, ${ownerPhoto.src} 2x`;
+    if (ownerPhoto) {
+      ownerPhoto.src = owner.avatar_original_url || fallbackPhoto;
+      ownerPhoto.srcset = `${ownerPhoto.src} 1x, ${ownerPhoto.src} 2x`;
+    }
   }
 
-  document.querySelector('[data-element="job-category"]').textContent =
-    job.category?.name || 'Others';
-  document.querySelector('[data-element="job-type"]').textContent =
-    job.job_type?.name || '';
-  document.querySelector('[data-element="job-salary"]').textContent = job.salary || '';
+  setText('[data-element="job-category"]', job.category?.name || 'Others');
+  setText('[data-element="job-type"]', job.job_type?.name || '');
+  setText('[data-element="job-salary"]', job.salary || '');
 };
 
 fetchData();
