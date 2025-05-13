@@ -1,5 +1,5 @@
 export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*'); // Replace with Webflow.io domain in production
+  res.setHeader('Access-Control-Allow-Origin', '*'); // Use Webflow domain in prod
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
