@@ -1,37 +1,25 @@
-// File: /api/jobs.js
-export default async function handler(req, res) {
-  // Set CORS headers to allow your Webflow site
-  res.setHeader('Access-Control-Allow-Origin', 'https://empoweredrecruitment-ec87a032a3d444380f.webflow.io');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  
-  // Handle OPTIONS request (preflight)
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
-  
-  // Your Loxo credentials (use environment variables)
-  const AGENCY_SLUG = process.env.URL_SLUG; // Replace with correct slug if needed
-  const BEARER_TOKEN = process.env.BEARER_TOKEN;
-  
+const fetchJobs = async () => {
+  const AGENCY_SLUG = 'skys-the-limit-staffing'; // Your agency slug
+  const BEARER_TOKEN = 'Bearer 00eec6549ea1dc3cc215ad33483ce488fe012a33c9e4d2c96d6d48c38050299fe69e6591b34961f81ec24e32f590a4db7ea313e6b2e100c9a764d1a337b83c4095'; // ⚠️ Exposed in frontend
+
   try {
-    // Server-side request to Loxo (protected from CORS issues)
     const response = await fetch(`https://app.loxo.co/api/${AGENCY_SLUG}/jobs`, {
       headers: {
-        'Authorization': `Bearer ${BEARER_TOKEN}`,
-        'Content-Type': 'application/json'
-      }
+        Authorization: BEARER_TOKEN,
+        'Content-Type': 'application/json',
+      },
     });
-    
+
     if (!response.ok) {
-      throw new Error(`API request failed with status ${response.status}`);
+      const text = await response.text();
+      throw new Error(`Loxo API error ${response.status}: ${text}`);
     }
-    
-    // Return data to client
+
     const data = await response.json();
-    return res.status(200).json(data);
+    console.log('✅ Jobs received:', data.results?.length);
+    return data;
   } catch (error) {
-    console.error('Error fetching jobs:', error);
-    return res.status(500).json({ error: 'Unable to load job listings. Please try again later.' });
+    console.error('❌ Failed to fetch jobs:', error);
+    return { results: [] };
   }
-}
+};
