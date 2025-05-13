@@ -9,7 +9,7 @@ export default async function handler(req, res) {
 
   // 🔐 Hardcoded for testing — remove this for production!
   const BEARER_TOKEN = 'Bearer 00eec6549ea1dc3cc215ad33483ce488fe012a33c9e4d2c96d6d48c38050299fe69e6591b34961f81ec24e32f590a4db7ea313e6b2e100c9a764d1a337b83c4095d3d20a4abe060da296c4e3dfcec8e59b4284c21e99d3de71a8a523a8a9333ecd1e3172e53bf6bd639a1917648a0a278f8414de681aa37b081f51560f4b2843';
-  const URL_SLUG = 'empowered-recruitment'; // Update if different
+  const URL_SLUG = 'skys-the-limit-staffing'; // Update if different
 
   try {
     const response = await fetch(`https://api.loxo.co/api/v1/company/${URL_SLUG}/jobs`, {
