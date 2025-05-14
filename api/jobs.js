@@ -11,12 +11,12 @@ export default async function handler(req, res) {
   }
   
   // Your Loxo credentials (use environment variables)
-  const AGENCY_SLUG = process.env.URL_SLUG; // Replace with correct slug if needed
-  const BEARER_TOKEN = process.env.BEARER_TOKEN;
+  const AGENCY_SLUG = process.env.AGENCY_SLUG; // Replace with correct slug if needed
+  const BEARER_TOKEN = process.env.LOXO_BEARER_TOKEN;
   
   try {
     // Server-side request to Loxo (protected from CORS issues)
-    const response = await fetch(`https://app.loxo.co/api/${URL_SLUG}/jobs`, {
+    const response = await fetch(`https://app.loxo.co/api/${AGENCY_SLUG}/jobs`, {
       headers: {
         'Authorization': `Bearer ${BEARER_TOKEN}`,
         'Content-Type': 'application/json'
