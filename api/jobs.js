@@ -1,23 +1,37 @@
+// File: /api/jobs.js
 export default async function handler(req, res) {
-  const AGENCY_SLUG = process.env.URL_SLUG;
+  // Set CORS headers to allow your Webflow site
+  res.setHeader('Access-Control-Allow-Origin', 'https://empoweredrecruitment-ec87a032a3d444380f.webflow.io');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  
+  // Handle OPTIONS request (preflight)
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+  
+  // Your Loxo credentials (use environment variables)
+  const AGENCY_SLUG = process.env.URL_SLUG; // Replace with correct slug if needed
   const BEARER_TOKEN = process.env.BEARER_TOKEN;
-
+  
   try {
-    const response = await fetch(`https://app.loxo.co/api/${AGENCY_SLUG}/jobs`, {
+    // Server-side request to Loxo (protected from CORS issues)
+    const response = await fetch(`https://app.loxo.co/api/${URL_SLUG}/jobs`, {
       headers: {
-        Authorization: `Bearer ${BEARER_TOKEN}`,
-        'Content-Type': 'application/json',
-      },
+        'Authorization': `Bearer ${BEARER_TOKEN}`,
+        'Content-Type': 'application/json'
+      }
     });
-
+    
     if (!response.ok) {
-      const errorText = await response.text();
-      return res.status(response.status).json({ error: errorText });
+      throw new Error(`API request failed with status ${response.status}`);
     }
-
+    
+    // Return data to client
     const data = await response.json();
-    res.status(200).json(data);
+    return res.status(200).json(data);
   } catch (error) {
-    res.status(500).json({ error: 'Server error', detail: error.message });
+    console.error('Error fetching jobs:', error);
+    return res.status(500).json({ error: 'Unable to load job listings. Please try again later.' });
   }
 }
