@@ -10,6 +10,11 @@ window.fsAttributes.push([
     const itemTemplateElement = item.element;
 
     const jobs = await fetchJobs();
+    if (!Array.isArray(jobs.results)) {
+      console.warn('⚠️ No jobs received from API.');
+      return;
+    }
+
     listInstance.clearItems();
 
     const newItems = jobs.results.map((job) =>
@@ -48,9 +53,12 @@ window.fsAttributes.push([
 const fetchJobs = async () => {
   try {
     const response = await fetch('https://e-test-nu.vercel.app/api/jobs');
-    return await response.json();
+    const data = await response.json();
+    console.log('📦 jobs response:', data);
+    return data;
   } catch (error) {
-    return [];
+    console.error('❌ Error fetching jobs:', error);
+    return { results: [] };
   }
 };
 
@@ -63,10 +71,12 @@ const fetchJob = (jobId, element) => {
     .then((data) => {
       if (element) element.innerHTML = data.description;
     })
-    .catch(() => {});
+    .catch((err) => console.error('❌ Error fetching job detail:', err));
 };
 
 const createItem = (job, jobDescription, templateElement) => {
+  if (!job || !job.title || !job.id) return null;
+
   const newItem = templateElement.cloneNode(true);
 
   const urlLink = newItem.querySelector('[data-element="url-link"]');
@@ -90,7 +100,8 @@ const createItem = (job, jobDescription, templateElement) => {
 
   if (btnApplyJob) {
     btnApplyJob.addEventListener('click', () => {
-      document.querySelector('.modal-apply-jobs').style.display = 'grid';
+      const modal = document.querySelector('.modal-apply-jobs');
+      if (modal) modal.style.display = 'grid';
       jobId = job.id;
     });
   }
@@ -129,74 +140,11 @@ const createFilter = (value, templateElement) => {
   return newFilter;
 };
 
-// Skeleton loader
 window.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('[ms-code-skeleton]').forEach((element) => {
     const skeletonDiv = document.createElement('div');
     skeletonDiv.classList.add('skeleton-loader');
     element.style.position = 'relative';
     element.appendChild(skeletonDiv);
-  });
-});
-
-// Apply job form submission
-document.addEventListener('DOMContentLoaded', () => {
-  const inputElement = document.querySelector('input[type="file"][name="fileToUpload"]');
-  const pond = FilePond.create(inputElement, {
-    credits: false,
-    name: 'fileToUpload',
-    storeAsFile: true,
-  });
-
-  Webflow.push(() => {
-    $('#wf-form-Job-Apply-Form').submit(async function (e) {
-      e.preventDefault();
-
-      const file = pond.getFile();
-      if (!file) {
-        alert('Please upload a resume.');
-        return;
-      }
-
-      const form = new FormData();
-      form.append('email', document.getElementById('email-job').value);
-      form.append('name', document.getElementById('name-job').value);
-      form.append('phone', document.getElementById('phone-job').value);
-      form.append('linkedin', document.getElementById('linkedin-job').value);
-      form.append('resume', file.file, file.file.name);
-
-      const options = {
-        method: 'POST',
-        headers: {
-          accept: 'application/json',
-          JobId: jobId,
-        },
-        body: form,
-      };
-
-      $('.submit-button-apply-job')
-        .val('Please Wait...')
-        .css('cursor', 'not-allowed')
-        .attr('disabled', true);
-
-      fetch('https://e-test-nu.vercel.app/api/apply', options)
-        .then((response) => {
-          $('.close-modal-button').trigger('click');
-          Toastify({
-            text: 'Your application was successfully sent!',
-            duration: 2000,
-            gravity: 'top',
-            position: 'center',
-            style: { background: '#527853', color: '#FFFFFF' },
-          }).showToast();
-          pond.removeFile();
-          $('#wf-form-Job-Apply-Form').trigger('reset');
-          $('.submit-button-apply-job')
-            .val('Submit')
-            .css('cursor', 'pointer')
-            .attr('disabled', false);
-        })
-        .catch((err) => console.error(err));
-    });
   });
 });
