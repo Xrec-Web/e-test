@@ -1,21 +1,28 @@
-// File: /api/apply.js
-
 import formidable from 'formidable';
 import fs from 'fs';
 
 export const config = {
   api: {
-    bodyParser: false, // Required to handle multipart form data
+    bodyParser: false,
   },
 };
 
 export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', 'https://empoweredrecruitment-ec87a032a3d444380f.webflow.io');
+  const allowedOrigin = 'https://empoweredrecruitment-ec87a032a3d444380f.webflow.io';
+
+  res.setHeader('Access-Control-Allow-Origin', allowedOrigin);
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, JobId');
 
-  if (req.method === 'OPTIONS') return res.status(200).end();
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
+  if (req.method === 'OPTIONS') {
+    res.status(200).end();
+    return;
+  }
+
+  if (req.method !== 'POST') {
+    res.status(405).json({ error: 'Method Not Allowed' });
+    return;
+  }
 
   const jobId = req.headers['jobid'];
   const agencySlug = process.env.AGENCY_SLUG;
