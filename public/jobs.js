@@ -1,3 +1,4 @@
+
 let jobId = '';
 
 const fetchJobs = async () => {
@@ -152,7 +153,6 @@ window.fsAttributes.push([
   },
 ]);
 
-// 🔽 Skeleton loader + Apply script
 window.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('[ms-code-skeleton]').forEach((element) => {
     const skeleton = document.createElement('div');
@@ -161,11 +161,10 @@ window.addEventListener('DOMContentLoaded', () => {
     element.appendChild(skeleton);
   });
 
-  // ✅ File input setup with ms-code attr
   const inputElement = document.querySelector('[ms-code-file-upload-input="fileToUpload"]');
 
   if (!inputElement) {
-    console.error('❌ File input not found. Expected: ms-code-file-upload-input="fileToUpload"');
+    console.error('❌ File input not found.');
     return;
   }
 
@@ -185,19 +184,17 @@ window.addEventListener('DOMContentLoaded', () => {
         }
 
         const form = new FormData();
-        form.append("email", $("#email-2").val());
-        form.append("name", $("#name-2").val());
-        form.append("phone", $("#phone-2").val());
-        form.append("linkedin", $("#linkedin-2").val());
+        form.append("email", document.getElementById("email-job").value);
+        form.append("name", document.getElementById("name-job").value);
+        form.append("phone", document.getElementById("phone-job").value);
+        form.append("linkedin", document.getElementById("linkedin-job").value);
         form.append("resume", pond.getFile().file);
 
         $(".button.job-apply-modal").val("Please Wait...").attr("disabled", true);
 
         fetch("https://e-test-nu.vercel.app/api/apply", {
           method: "POST",
-          headers: {
-            "JobId": jobId,
-          },
+          headers: { "JobId": jobId },
           body: form,
         })
           .then((res) => res.json())
@@ -225,7 +222,6 @@ window.addEventListener('DOMContentLoaded', () => {
       });
     });
   } catch (e) {
-    console.error('❌ FilePond initialization failed:', e);
+    console.error('❌ FilePond init error:', e);
   }
 });
-
