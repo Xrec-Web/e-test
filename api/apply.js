@@ -13,7 +13,7 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
 
   const jobId = req.headers['jobid'];
-  const basicAuthToken = 'Basic 00eec6549ea1dc3cc215ad33483ce488fe012a33c9e4d2c96d6d48c38050299fe69e6591b34961f81ec24e32f590a4db7ea313e6b2e100c9a764d1a337b83c4095d3d20a4abe060da296c4e3dfcec8e59b4284c21e99d3de71a8a523a8a9333ecd1e3172e53bf6bd639a1917648a0a278f8414de681aa37b081f51560f4b2843';
+  const auth = 'Basic 00eec6549ea1dc3cc215ad33483ce488fe012a33c9e4d2c96d6d48c38050299fe69e6591b34961f81ec24e32f590a4db7ea313e6b2e100c9a764d1a337b83c4095d3d20a4abe060da296c4e3dfcec8e59b4284c21e99d3de71a8a523a8a9333ecd1e3172e53bf6bd639a1917648a0a278f8414de681aa37b081f51560f4b2843';
 
   if (!jobId) {
     return res.status(400).json({ error: 'Missing job ID in headers' });
@@ -26,12 +26,15 @@ export default async function handler(req, res) {
     }
     const rawBody = Buffer.concat(chunks);
 
+    console.log("📤 Submitting application for Job ID:", jobId);
+    console.log("📎 File size:", rawBody.length, "bytes");
+
     const response = await fetch(`https://app.loxo.co/api/skys-the-limit-staffing/jobs/${jobId}/apply`, {
       method: 'POST',
       headers: {
         accept: 'application/json',
-        authorization: basicAuthToken,
-        'Content-Type': req.headers['content-type'],
+        authorization: auth,
+        // do NOT manually set content-type
       },
       body: rawBody,
     });
