@@ -27,8 +27,6 @@ const fetchJobDescription = async (jobId, element) => {
     const data = await res.json();
     if (element && data?.description) {
       element.innerHTML = data.description;
-    } else {
-      console.warn(`⚠️ No description found for job ID: ${jobId}`);
     }
   } catch (err) {
     console.error('❌ Error fetching job detail:', err);
@@ -57,7 +55,6 @@ const createItem = (job, templateElement) => {
   if (salary) salary.textContent = job.salary || '—';
   if (location) location.textContent = job.city || '—';
   if (publishedAt) publishedAt.textContent = moment(job.published_at).format('DD MMM YYYY');
-
   if (description) fetchJobDescription(job.id, description);
 
   if (btnApplyJob) {
@@ -155,11 +152,66 @@ window.fsAttributes.push([
   },
 ]);
 
+// 🔽 Skeleton loader on page load
 window.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('[ms-code-skeleton]').forEach((element) => {
     const skeleton = document.createElement('div');
     skeleton.classList.add('skeleton-loader');
     element.style.position = 'relative';
     element.appendChild(skeleton);
+  });
+
+  // 🔽 FilePond & Apply Submission
+  const inputElement = document.querySelector('input[type="file"][name="fileToUpload"]');
+  const pond = FilePond.create(inputElement, {
+    credits: false,
+    name: "fileToUpload",
+    storeAsFile: true,
+  });
+
+  Webflow.push(function () {
+    $("#wf-form-Apply-Job-Form").submit(function (e) {
+      e.preventDefault();
+      if (!pond.getFile()) return;
+
+      const form = new FormData();
+      form.append("email", $("#email-2").val());
+      form.append("name", $("#name-2").val());
+      form.append("phone", $("#phone-2").val());
+      form.append("linkedin", $("#linkedin-2").val());
+      form.append("resume", pond.getFile().file);
+
+      $(".button.job-apply-modal").val("Please Wait...").attr("disabled", true);
+
+      fetch("https://e-test-nu.vercel.app/api/apply", {
+        method: "POST",
+        headers: {
+          "JobId": jobId,
+        },
+        body: form,
+      })
+        .then((res) => res.json())
+        .then(() => {
+          $(".fs_modal-1_close-2").trigger("click");
+          $(".modal-apply-jobs").removeClass("active");
+          Toastify({
+            text: "Your application has been sent!",
+            duration: 4000,
+            gravity: "top",
+            position: "center",
+            backgroundColor: "#005267",
+          }).showToast();
+          pond.removeFile();
+          $("#wf-form-Apply-Job-Form")[0].reset();
+          $(".button.job-apply-modal").val("Submit").attr("disabled", false);
+        })
+        .catch((err) => {
+          console.error("❌ Submission failed:", err);
+          alert("There was a problem submitting your application.");
+          $(".button.job-apply-modal").val("Submit").attr("disabled", false);
+        });
+
+      return false;
+    });
   });
 });
