@@ -15,7 +15,7 @@ export default async function handler(req, res) {
   const jobId = req.headers['jobid'];
   const AGENCY_SLUG = 'skys-the-limit-staffing';
 
-  // 🔒 Use the correct working token format — BASIC
+  // ✅ Agency's known working Basic token for /apply endpoint
   const BASIC_TOKEN = 'Basic d95e9dff9ee06655b068ffe53cb13d3423d3f1acbe43e6fb1552e28fc408bedffc0629fd30dd9dfbaa9dfbdd67ed56ce69a39cbcac4a5b42d065c9c17b78626c5a565850cf1bcf40191f2b554da02daaf320f85523aebef238e2882d2c43c046ae6c9eda6bb2f6dd7fc1cf10dc6d089ba61343acfedfd60e6bdc506e8683c1fd';
 
   if (!jobId) {
@@ -29,8 +29,8 @@ export default async function handler(req, res) {
     }
     const rawBody = Buffer.concat(chunks);
 
-    console.log("📦 File size:", rawBody.length, "bytes");
-    console.log("📩 Posting to:", `https://app.loxo.co/api/${AGENCY_SLUG}/jobs/${jobId}/apply`);
+    console.log("📦 Submitting application for Job ID:", jobId);
+    console.log("📤 File size:", rawBody.length, "bytes");
 
     const response = await fetch(
       `https://app.loxo.co/api/${AGENCY_SLUG}/jobs/${jobId}/apply`,
@@ -45,18 +45,17 @@ export default async function handler(req, res) {
       }
     );
 
-    const contentType = response.headers.get("content-type");
     const responseText = await response.text();
 
     if (!response.ok) {
-      console.error("❌ Loxo response error:", response.status, responseText);
-      return res.status(500).json({ error: "Loxo API Error", detail: responseText });
+      console.error("❌ Loxo API Error:", response.status, responseText);
+      return res.status(500).json({ error: 'Loxo API Error', detail: responseText });
     }
 
-    console.log("✅ Loxo responded successfully:", contentType);
-    return res.status(200).json({ success: true, data: responseText });
+    console.log("✅ Loxo Apply Success:", responseText);
+    return res.status(200).json({ success: true, response: responseText });
   } catch (error) {
-    console.error('❌ Server error:', error.message);
+    console.error('❌ Proxy Error:', error.message);
     return res.status(500).json({ error: 'Proxy Error', detail: error.message });
   }
 }
