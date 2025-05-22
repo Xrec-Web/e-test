@@ -152,7 +152,7 @@ window.fsAttributes.push([
   },
 ]);
 
-// 🔽 Skeleton loader on page load
+// 🔽 Skeleton loader + Apply script
 window.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('[ms-code-skeleton]').forEach((element) => {
     const skeleton = document.createElement('div');
@@ -161,8 +161,8 @@ window.addEventListener('DOMContentLoaded', () => {
     element.appendChild(skeleton);
   });
 
-  // 🔽 FilePond & Apply Submission
-  const inputElement = document.querySelector('input[type="file"][name="fileToUpload"]');
+  // 🔽 FilePond & Apply Submission using MemberScript attr
+  const inputElement = document.querySelector('[ms-code-file-upload-input="fileToUpload"]');
   const pond = FilePond.create(inputElement, {
     credits: false,
     name: "fileToUpload",
@@ -202,7 +202,7 @@ window.addEventListener('DOMContentLoaded', () => {
             backgroundColor: "#005267",
           }).showToast();
           pond.removeFile();
-          $("#wf-form-Apply-Job-Form")[0].reset();
+          $("#wf-form-Job-Apply-Form")[0].reset();
           $(".button.job-apply-modal").val("Submit").attr("disabled", false);
         })
         .catch((err) => {
