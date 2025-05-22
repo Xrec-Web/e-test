@@ -161,57 +161,71 @@ window.addEventListener('DOMContentLoaded', () => {
     element.appendChild(skeleton);
   });
 
-  // 🔽 FilePond & Apply Submission using MemberScript attr
+  // ✅ File input setup with ms-code attr
   const inputElement = document.querySelector('[ms-code-file-upload-input="fileToUpload"]');
-  const pond = FilePond.create(inputElement, {
-    credits: false,
-    name: "fileToUpload",
-    storeAsFile: true,
-  });
 
-  Webflow.push(function () {
-    $("#wf-form-Job-Apply-Form").submit(function (e) {
-      e.preventDefault();
-      if (!pond.getFile()) return;
+  if (!inputElement) {
+    console.error('❌ File input not found. Expected: ms-code-file-upload-input="fileToUpload"');
+    return;
+  }
 
-      const form = new FormData();
-      form.append("email", $("#email-2").val());
-      form.append("name", $("#name-2").val());
-      form.append("phone", $("#phone-2").val());
-      form.append("linkedin", $("#linkedin-2").val());
-      form.append("resume", pond.getFile().file);
-
-      $(".button.job-apply-modal").val("Please Wait...").attr("disabled", true);
-
-      fetch("https://e-test-nu.vercel.app/api/apply", {
-        method: "POST",
-        headers: {
-          "JobId": jobId,
-        },
-        body: form,
-      })
-        .then((res) => res.json())
-        .then(() => {
-          $(".fs_modal-1_close-2").trigger("click");
-          $(".modal-apply-jobs").removeClass("active");
-          Toastify({
-            text: "Your application has been sent!",
-            duration: 4000,
-            gravity: "top",
-            position: "center",
-            backgroundColor: "#005267",
-          }).showToast();
-          pond.removeFile();
-          $("#wf-form-Job-Apply-Form")[0].reset();
-          $(".button.job-apply-modal").val("Submit").attr("disabled", false);
-        })
-        .catch((err) => {
-          console.error("❌ Submission failed:", err);
-          alert("There was a problem submitting your application.");
-          $(".button.job-apply-modal").val("Submit").attr("disabled", false);
-        });
-
-      return false;
+  try {
+    const pond = FilePond.create(inputElement, {
+      credits: false,
+      name: "fileToUpload",
+      storeAsFile: true,
     });
-  });
+
+    Webflow.push(function () {
+      $("#wf-form-Job-Apply-Form").submit(function (e) {
+        e.preventDefault();
+        if (!pond.getFile()) {
+          alert("Please upload a file before submitting.");
+          return;
+        }
+
+        const form = new FormData();
+        form.append("email", $("#email-2").val());
+        form.append("name", $("#name-2").val());
+        form.append("phone", $("#phone-2").val());
+        form.append("linkedin", $("#linkedin-2").val());
+        form.append("resume", pond.getFile().file);
+
+        $(".button.job-apply-modal").val("Please Wait...").attr("disabled", true);
+
+        fetch("https://e-test-nu.vercel.app/api/apply", {
+          method: "POST",
+          headers: {
+            "JobId": jobId,
+          },
+          body: form,
+        })
+          .then((res) => res.json())
+          .then(() => {
+            $(".fs_modal-1_close-2").trigger("click");
+            $(".modal-apply-jobs").removeClass("active");
+            Toastify({
+              text: "Your application has been sent!",
+              duration: 4000,
+              gravity: "top",
+              position: "center",
+              backgroundColor: "#005267",
+            }).showToast();
+            pond.removeFile();
+            $("#wf-form-Job-Apply-Form")[0].reset();
+            $(".button.job-apply-modal").val("Submit").attr("disabled", false);
+          })
+          .catch((err) => {
+            console.error("❌ Submission failed:", err);
+            alert("There was a problem submitting your application.");
+            $(".button.job-apply-modal").val("Submit").attr("disabled", false);
+          });
+
+        return false;
+      });
+    });
+  } catch (e) {
+    console.error('❌ FilePond initialization failed:', e);
+  }
 });
+
