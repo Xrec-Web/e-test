@@ -13,13 +13,10 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
 
   const jobId = req.headers['jobid'];
-  const AGENCY_SLUG = 'skys-the-limit-staffing';
-
-  // ✅ Agency's known working Basic token for /apply endpoint
-  const BASIC_TOKEN = 'Basic d95e9dff9ee06655b068ffe53cb13d3423d3f1acbe43e6fb1552e28fc408bedffc0629fd30dd9dfbaa9dfbdd67ed56ce69a39cbcac4a5b42d065c9c17b78626c5a565850cf1bcf40191f2b554da02daaf320f85523aebef238e2882d2c43c046ae6c9eda6bb2f6dd7fc1cf10dc6d089ba61343acfedfd60e6bdc506e8683c1fd';
+  const bearerToken = '00eec6549ea1dc3cc215ad33483ce488fe012a33c9e4d2c96d6d48c38050299fe69e6591b34961f81ec24e32f590a4db7ea313e6b2e100c9a764d1a337b83c4095d3d20a4abe060da296c4e3dfcec8e59b4284c21e99d3de71a8a523a8a9333ecd1e3172e53bf6bd639a1917648a0a278f8414de681aa37b081f51560f4b2843';
 
   if (!jobId) {
-    return res.status(400).json({ error: 'Missing job ID' });
+    return res.status(400).json({ error: 'Missing job ID in headers' });
   }
 
   try {
@@ -29,16 +26,16 @@ export default async function handler(req, res) {
     }
     const rawBody = Buffer.concat(chunks);
 
-    console.log("📦 Submitting application for Job ID:", jobId);
-    console.log("📤 File size:", rawBody.length, "bytes");
+    console.log("📤 Submitting application for Job ID:", jobId);
+    console.log("📎 File size:", rawBody.length, "bytes");
 
     const response = await fetch(
-      `https://app.loxo.co/api/${AGENCY_SLUG}/jobs/${jobId}/apply`,
+      `https://app.loxo.co/api/skys-the-limit-staffing/jobs/${jobId}/apply`,
       {
         method: 'POST',
         headers: {
           accept: 'application/json',
-          authorization: BASIC_TOKEN,
+          authorization: `Bearer ${bearerToken}`,
           'Content-Type': req.headers['content-type'],
         },
         body: rawBody,
@@ -49,13 +46,17 @@ export default async function handler(req, res) {
 
     if (!response.ok) {
       console.error("❌ Loxo API Error:", response.status, responseText);
-      return res.status(500).json({ error: 'Loxo API Error', detail: responseText });
+      return res.status(response.status).json({
+        error: 'Loxo API Error',
+        status: response.status,
+        detail: responseText,
+      });
     }
 
-    console.log("✅ Loxo Apply Success:", responseText);
+    console.log("✅ Application submitted successfully.");
     return res.status(200).json({ success: true, response: responseText });
   } catch (error) {
-    console.error('❌ Proxy Error:', error.message);
-    return res.status(500).json({ error: 'Proxy Error', detail: error.message });
+    console.error("❌ Server Error:", error.message);
+    return res.status(500).json({ error: 'Internal Server Error', detail: error.message });
   }
 }
