@@ -170,7 +170,7 @@ window.addEventListener('DOMContentLoaded', () => {
   });
 
   Webflow.push(function () {
-    $("#wf-form-Apply-Job-Form").submit(function (e) {
+    $("#wf-form-Job-Apply-Form").submit(function (e) {
       e.preventDefault();
       if (!pond.getFile()) return;
 
