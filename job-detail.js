@@ -4,13 +4,13 @@ const fetchData = async () => {
   const jobId = urlParams.get('id');
 
   if (!jobId) {
-    window.location.href = 'https://www.roverrecruitment.com.au/jobs';
+    window.location.href = 'https://empoweredrecruitment-ec87a032a3d444380f.webflow.io/explore-jobs';
   }
 
   let fetchJob = async () => {
     try {
       const response = await fetch(
-        `https://w-scripts.vercel.app/api/loxo/rover/job?id=${jobId}`
+        `https://e-test-nu.vercel.app/api/job?id=${jobId}`
       );
       const data = await response.json();
 
@@ -132,7 +132,7 @@ document.addEventListener('DOMContentLoaded', function () {
   
       try {
         const response = await fetch(
-          'https://w-scripts.vercel.app/api/loxo/rover/apply',
+          'https://e-test-nu.vercel.app/api/apply',
           options
         );
   
