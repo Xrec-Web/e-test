@@ -22,13 +22,13 @@ export default async function handler(req, res) {
     const rawBody = Buffer.concat(chunks);
 
     const response = await fetch(
-      `https://app.loxo.co/api/skys-the-limit-staffing/jobs/${req.headers['jobid']}/apply`,
+      `https://app.loxo.co/api/axiom-talent/jobs/${req.headers['jobid']}/apply`,
       {
         method: 'POST',
         headers: {
           accept: 'application/json',
           authorization:
-            'Basic 00eec6549ea1dc3cc215ad33483ce488fe012a33c9e4d2c96d6d48c38050299fe69e6591b34961f81ec24e32f590a4db7ea313e6b2e100c9a764d1a337b83c4095d3d20a4abe060da296c4e3dfcec8e59b4284c21e99d3de71a8a523a8a9333ecd1e3172e53bf6bd639a1917648a0a278f8414de681aa37b081f51560f4b2843',
+            'Basic f8600b3f24ebbf8b8e32f16b0b3d1307870fdf58f3686b2cf62843a7df7b1929892eacd1af24d64f9e01711b98a4f0aecba4a7a415122b12aec4a81d3c0908eeca92f9086fb74df476db66bdb9311fdc001dc0dd2e640646bf40f8a6d240876ea5da6011fdaa28ca65b333a8b8e156af2b16a80435c8f8a2196ee850f26ec589',
           'Content-Type': req.headers['content-type'],
         },
         body: rawBody,
