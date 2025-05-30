@@ -17,7 +17,7 @@ export default async function handler(req, res) {
       method: 'GET',
       headers: {
         accept: 'application/json',
-        authorization: 'Basic 8f4998dbcf46...YOUR-TOKEN-HERE...', // keep secure via env var later
+        authorization: 'Basic f8600b3f24ebbf8b8e32f16b0b3d1307870fdf58f3686b2cf62843a7df7b1929892eacd1af24d64f9e01711b98a4f0aecba4a7a415122b12aec4a81d3c0908eeca92f9086fb74df476db66bdb9311fdc001dc0dd2e640646bf40f8a6d240876ea5da6011fdaa28ca65b333a8b8e156af2b16a80435c8f8a2196ee850f26ec589', // keep secure via env var later
       },
     });
 
