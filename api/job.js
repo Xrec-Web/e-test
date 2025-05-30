@@ -11,30 +11,34 @@ export default async function handler(req, res) {
   if (!id) return res.status(400).json({ error: 'Job ID is required' });
 
   try {
-    console.log('Fetching job ID:', id); // 👈 log the ID
+    console.log(`📦 Fetching job details for ID: ${id}`);
 
-    const response = await fetch(
-      `https://app.loxo.co/api/axiom-talent/jobs/${id}`,
-      {
-        method: 'GET',
-        headers: {
-          accept: 'application/json',
-          authorization:
-            'Basic 8f4998dbcf4615d2c28f8063040d916e49e44d2aca927b5abbef53d7746754e31e49f4aa385ff40368ec86ec1b1e95fddd23c5cb0e7f349259eab2ff83ec9f0f70185b2c56c962e1f432c619a1dad40c3bf76e157c6a6d18c9521452e8d72390c4de9e496fa87236728b9a77cb8a7bd5a0334f795745700526fdc83eb68a3afa',
-        },
-      }
-    );
+    const response = await fetch(`https://app.loxo.co/api/axiom-talent/jobs/${id}`, {
+      method: 'GET',
+      headers: {
+        accept: 'application/json',
+        authorization: 'Basic 8f4998dbcf46...YOUR-TOKEN-HERE...', // keep secure via env var later
+      },
+    });
 
-    const responseBody = await response.text(); // 👈 catch non-JSON error bodies
+    const text = await response.text(); // get raw text (whether HTML or JSON)
+
     if (!response.ok) {
-      console.error(`❌ Failed to fetch job ${id}:`, response.status, responseBody);
-      throw new Error(`Fetch failed: ${response.status}`);
+      console.error(`❌ Loxo fetch error: ${response.status} ${text}`);
+      return res.status(response.status).json({ error: `Loxo error: ${text}` });
     }
 
-    const data = JSON.parse(responseBody);
+    let data;
+    try {
+      data = JSON.parse(text); // try parse
+    } catch (parseErr) {
+      console.error('❌ Failed to parse Loxo response as JSON:', parseErr.message);
+      return res.status(500).json({ error: 'Invalid JSON from Loxo API' });
+    }
+
     return res.status(200).json(data);
   } catch (error) {
-    console.error('❌ Error in /api/job:', error.message);
-    return res.status(500).json({ error: error.message });
+    console.error('❌ Unhandled server error in /api/job:', error.message);
+    return res.status(500).json({ error: 'Internal Server Error' });
   }
 }
