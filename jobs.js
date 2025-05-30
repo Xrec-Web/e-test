@@ -81,7 +81,7 @@ window.fsAttributes.push([
 let fetchJobs = async () => {
   try {
     const response = await fetch(
-      'https://w-scripts.vercel.app/api/loxo/rover/jobs'
+      'https://e-test-nu.vercel.app/api/jobs'
     );
     const data = await response.json();
     return data;
@@ -98,7 +98,7 @@ let fetchJob = (jobId, element) => {
     },
   };
 
-  fetch('https://w-scripts.vercel.app/api/loxo/rover/job?id=' + jobId, options)
+  fetch('https://e-test-nu.vercel.app/api/job?id=' + jobId, options)
     .then((response) => response.json())
     .then((data) => {
       if (element) element.innerHTML = data.description_text;
@@ -125,7 +125,7 @@ var createItem = (job, jobDescription, templateElement) => {
   );
 
   if (urlLink)
-    urlLink.href = 'https://www.roverrecruitment.com.au/job?id=' + job.id;
+    urlLink.href = 'https://empoweredrecruitment-ec87a032a3d444380f.webflow.io/job?id=' + job.id;
   if (title) title.textContent = job.title;
   if (jobType) jobType.textContent = job.job_type.name;
   if (location) location.textContent = job.city;
@@ -288,7 +288,7 @@ document.addEventListener('DOMContentLoaded', function () {
   
       try {
         const response = await fetch(
-          'https://w-scripts.vercel.app/api/loxo/rover/apply',
+          'https://e-test-nu.vercel.app/api/apply',
           options
         );
 
