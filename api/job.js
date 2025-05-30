@@ -1,7 +1,16 @@
-
 export default async function handler(req, res) {
   const { method, query } = req;
   const { id } = query;
+
+  // ✅ Set CORS headers
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+  // ✅ Handle preflight request
+  if (method === 'OPTIONS') {
+    return res.status(200).end();
+  }
 
   if (method !== 'GET') {
     return res.status(405).json({ error: 'Method Not Allowed' });
@@ -13,7 +22,7 @@ export default async function handler(req, res) {
 
   try {
     const response = await fetch(
-      `https://app.loxo.co/api/axiom-talet/jobs/${id}`,
+      `https://app.loxo.co/api/axiom-talent/jobs/${id}`, // ✅ fixed typo: "talet" → "talent"
       {
         method: 'GET',
         headers: {
