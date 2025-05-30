@@ -1,62 +1,29 @@
-// File: /api/jobs.js
-
 export default async function handler(req, res) {
-  // CORS headers to allow Webflow access
-  res.setHeader('Access-Control-Allow-Origin', 'https://empoweredrecruitment-ec87a032a3d444380f.webflow.io');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  const { method } = req;
 
-  // Handle preflight (OPTIONS) request
-  if (req.method === 'OPTIONS') return res.status(200).end();
-
-  // Only allow GET requests
-  if (req.method !== 'GET') {
+  if (method !== 'GET') {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
-  // Environment variables
-  const AGENCY_SLUG = process.env.AGENCY_SLUG;
-  const BEARER_TOKEN = process.env.LOXO_BEARER_TOKEN;
-
-  if (!AGENCY_SLUG || !BEARER_TOKEN) {
-    return res.status(500).json({
-      error: 'Missing environment variables',
-      detail: {
-        AGENCY_SLUG_PRESENT: !!AGENCY_SLUG,
-        BEARER_TOKEN_PRESENT: !!BEARER_TOKEN,
-      },
-    });
-  }
-
-  const jobId = req.query.id;
-  const endpoint = jobId
-    ? `https://app.loxo.co/api/${AGENCY_SLUG}/jobs/${jobId}`
-    : `https://app.loxo.co/api/${AGENCY_SLUG}/jobs?published_at_sort=desc&status=active&per_page=100`;
-
   try {
-    const response = await fetch(endpoint, {
-      method: 'GET',
-      headers: {
-        accept: 'application/json',
-        Authorization: `Bearer ${BEARER_TOKEN}`,
-      },
-    });
+    const response = await fetch(
+      'https://app.loxo.co/api/rover-recruitment/jobs?published_at_sort=desc&status=active&per_page=100',
+      {
+        method: 'GET',
+        headers: {
+          accept: 'application/json',
+          authorization: `Basic 8f4998dbcf4615d2c28f8063040d916e49e44d2aca927b5abbef53d7746754e31e49f4aa385ff40368ec86ec1b1e95fddd23c5cb0e7f349259eab2ff83ec9f0f70185b2c56c962e1f432c619a1dad40c3bf76e157c6a6d18c9521452e8d72390c4de9e496fa87236728b9a77cb8a7bd5a0334f795745700526fdc83eb68a3afa`,
+        },
+      }
+    );
 
     if (!response.ok) {
-      const errorText = await response.text();
-      return res.status(response.status).json({
-        error: `Loxo API responded with status ${response.status}`,
-        detail: errorText,
-      });
+      throw new Error('Failed to fetch jobs');
     }
 
     const data = await response.json();
     return res.status(200).json(data);
   } catch (error) {
-    console.error('❌ Server Error:', error.message);
-    return res.status(500).json({
-      error: 'Internal server error',
-      detail: error.message,
-    });
+    return res.status(500).json({ error: error.message });
   }
 }
