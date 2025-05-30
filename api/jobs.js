@@ -7,12 +7,12 @@ export default async function handler(req, res) {
 
   try {
     const response = await fetch(
-      'https://app.loxo.co/api/rover-recruitment/jobs?published_at_sort=desc&status=active&per_page=100',
+      'https://app.loxo.co/api/axiom-talent/jobs?published_at_sort=desc&status=active&per_page=100',
       {
         method: 'GET',
         headers: {
           accept: 'application/json',
-          authorization: `Basic 8f4998dbcf4615d2c28f8063040d916e49e44d2aca927b5abbef53d7746754e31e49f4aa385ff40368ec86ec1b1e95fddd23c5cb0e7f349259eab2ff83ec9f0f70185b2c56c962e1f432c619a1dad40c3bf76e157c6a6d18c9521452e8d72390c4de9e496fa87236728b9a77cb8a7bd5a0334f795745700526fdc83eb68a3afa`,
+          authorization: `Basic f8600b3f24ebbf8b8e32f16b0b3d1307870fdf58f3686b2cf62843a7df7b1929892eacd1af24d64f9e01711b98a4f0aecba4a7a415122b12aec4a81d3c0908eeca92f9086fb74df476db66bdb9311fdc001dc0dd2e640646bf40f8a6d240876ea5da6011fdaa28ca65b333a8b8e156af2b16a80435c8f8a2196ee850f26ec589`,
         },
       }
     );
