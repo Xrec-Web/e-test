@@ -49,7 +49,7 @@ const createItem = (job, templateElement) => {
   const description = newItem.querySelector('[data-element="job-description"]');
   const btnApplyJob = newItem.querySelector('[data-element="apply-now"]');
 
-  if (urlLink) urlLink.href = `https://empoweredrecruitment.webflow.io/job?id=${job.id}`;
+  if (urlLink) urlLink.href = `https://empoweredrecruitment-ec87a032a3d444380f.webflow.io/job?id=${job.id}`;
   if (title) title.textContent = job.title;
   if (jobType) jobType.textContent = job.job_type?.name || '—';
   if (jobCategory) jobCategory.textContent = job.category?.name || 'Others';
